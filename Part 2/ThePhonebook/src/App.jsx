@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import axios from 'axios'
 
 const Filter = ({ searchTerm, handleSearchChange }) => {
   return (
@@ -46,12 +47,23 @@ const Persons = ({ persons }) => {
 }
 
 const App = () => {
-  const [persons, setPersons] = useState([
-    { name: 'Arto Hellas', number: '040-1234567' }
-  ]) 
+  const [persons, setPersons] = useState([]) 
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
+
+  useEffect(() => {
+    console.log('Fetching data from server...')
+    axios
+      .get('/api/persons')
+      .then(response => {
+        console.log('Data received:', response.data)
+        setPersons(response.data)
+      })
+      .catch(error => {
+        console.error('Error fetching data:', error)
+      })
+  }, [])
 
   const addPerson = (event) => {
     event.preventDefault()
@@ -88,6 +100,9 @@ const App = () => {
   const filteredPersons = persons.filter(person =>
     person.name.toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  console.log('Current persons state:', persons)
+  console.log('Filtered persons:', filteredPersons)
 
   return (
     <div>
