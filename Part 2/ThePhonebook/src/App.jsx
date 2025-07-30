@@ -34,6 +34,28 @@ const PersonForm = ({ newName, newNumber, handleNameChange, handleNumberChange, 
   )
 }
 
+const Notification = ({ message, type }) => {
+  if (message === null) {
+    return null
+  }
+
+  const notificationStyle = {
+    color: type === 'success' ? 'green' : 'red',
+    background: 'lightgrey',
+    fontSize: 20,
+    borderStyle: 'solid',
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10
+  }
+
+  return (
+    <div style={notificationStyle}>
+      {message}
+    </div>
+  )
+}
+
 const Persons = ({ persons, handleDelete }) => {
   return (
     <>
@@ -51,6 +73,7 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
+  const [notification, setNotification] = useState({ message: null, type: null })
 
   useEffect(() => {
     console.log('Fetching data from server...')
@@ -62,8 +85,22 @@ const App = () => {
       })
       .catch(error => {
         console.error('Error fetching data:', error)
+        if (error.response && error.response.status === 404) {
+          showNotification('Server endpoint not found', 'error')
+        } else if (error.code === 'ECONNREFUSED') {
+          showNotification('Cannot connect to server', 'error')
+        } else {
+          showNotification('Error fetching persons from server', 'error')
+        }
       })
   }, [])
+
+  const showNotification = (message, type) => {
+    setNotification({ message, type })
+    setTimeout(() => {
+      setNotification({ message: null, type: null })
+    }, 5000)
+  }
 
   const addPerson = (event) => {
     event.preventDefault()
@@ -86,9 +123,17 @@ const App = () => {
             ))
             setNewName('')
             setNewNumber('')
+            showNotification(`Updated ${newName}'s number`, 'success')
           })
           .catch(error => {
             console.error('Error updating person:', error)
+            if (error.response && error.response.status === 404) {
+              showNotification(`Information of ${newName} has already been removed from server`, 'error')
+              // Remove the person from local state since they no longer exist on server
+              setPersons(persons.filter(person => person.id !== existingPerson.id))
+            } else {
+              showNotification(`Error updating ${newName}'s number`, 'error')
+            }
           })
       }
     } else {
@@ -103,9 +148,11 @@ const App = () => {
           setPersons(persons.concat(returnedPerson))
           setNewName('')
           setNewNumber('')
+          showNotification(`Added ${newName}`, 'success')
         })
         .catch(error => {
           console.error('Error creating person:', error)
+          showNotification(`Error adding ${newName}`, 'error')
         })
     }
   }
@@ -128,9 +175,17 @@ const App = () => {
         .remove(id)
         .then(() => {
           setPersons(persons.filter(person => person.id !== id))
+          showNotification(`Deleted ${name}`, 'success')
         })
         .catch(error => {
           console.error('Error deleting person:', error)
+          if (error.response && error.response.status === 404) {
+            showNotification(`Information of ${name} has already been removed from server`, 'error')
+            // Remove the person from local state since they no longer exist on server
+            setPersons(persons.filter(person => person.id !== id))
+          } else {
+            showNotification(`Error deleting ${name}`, 'error')
+          }
         })
     }
   }
@@ -145,6 +200,8 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+
+      <Notification message={notification.message} type={notification.type} />
 
       <Filter 
         searchTerm={searchTerm}
