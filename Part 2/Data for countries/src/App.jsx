@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react'
 import './App.css'
 
 // OpenWeatherMap API configuration
-const WEATHER_API_KEY = import.meta.env.VITE_WEATHER_API_KEY || '68b549863894e3bf4d498a6c21776923'
+const WEATHER_API_KEY = import.meta.env.VITE_WEATHER_API_KEY
 const GEOCODING_BASE_URL = 'https://api.openweathermap.org/geo/1.0/direct'
 const WEATHER_BASE_URL = 'https://api.openweathermap.org/data/3.0/onecall'
 
 // Debug: Check if API key is loaded
 console.log('API Key loaded:', WEATHER_API_KEY ? 'Yes' : 'No')
-console.log('API Key value:', WEATHER_API_KEY)
+console.log('API Key value:', WEATHER_API_KEY ? '***HIDDEN***' : 'Not found')
 
 // Function to get weather icon based on weather condition
 const getWeatherIcon = (weatherData) => {
